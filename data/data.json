@@ -1,0 +1,17 @@
+{
+  "current_question": {
+    "text": "Siapakah Pemain bola terbaik menurut AI",
+    "answers": [
+      {
+        "text": "Messi",
+        "score": 80,
+        "revealed": true
+      }
+    ]
+  },
+  "team_scores": {
+    "A": 10,
+    "B": 10
+  },
+  "strikes": 1
+}
