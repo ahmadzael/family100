@@ -52,7 +52,16 @@ export default function PresenterBoard() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!state && !error) return <div className="p-6 text-center text-2xl">Loading...</div>;
+  // Debug log to inspect the state
+  console.log('Current state:', state);
+  
+  if (!state) return <div className="p-6 text-center text-2xl">Loading game state...</div>;
+  
+  // Get the current question
+  const currentQuestion = state.questions?.find(q => q.id === state.currentQID) || 
+                        state.questions?.[0]; // Fallback to first question if currentQID not found
+  
+  console.log('Current question:', currentQuestion);
 
   return (
     <Box
@@ -163,17 +172,17 @@ export default function PresenterBoard() {
                   lineHeight: 1.3,
                 }}
               >
-                {state?.questions?.find(q => q.id === state.currentQID)?.text || "No Question Set"}
+                {currentQuestion?.text || "No Question Set"}
               </Typography>
             </CardContent>
           </Card>
         </Box>
 
         {/* Answers Section */}
-        {state?.questions?.find(q => q.id === state.currentQID)?.answers && (
+        {currentQuestion?.answers && currentQuestion.answers.length > 0 && (
           <Box sx={{ mb: 6 }}>
             <Grid container spacing={3}>
-              {state.questions.find(q => q.id === state.currentQID).answers.map((a, i) => (
+              {currentQuestion.answers.map((a, i) => (
                 <Grid item xs={12} md={6} key={i}>
                   <Card
                     elevation={a.revealed ? 12 : 4}

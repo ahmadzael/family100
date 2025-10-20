@@ -38,6 +38,6 @@ func main() {
 	// wrap everything with CORS
 	handlerWithCORS := withCORS(mux)
 
-	log.Println("✅ Server running at http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", handlerWithCORS))
+	log.Println("✅ Server running at http://localhost:3099")
+	log.Fatal(http.ListenAndServe(":3099", handlerWithCORS))
 }
