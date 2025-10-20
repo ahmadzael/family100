@@ -493,8 +493,8 @@ export default function AdminPanel() {
                             Question {question.id}
                           </Typography>
                           <Chip
-                            label={question.id === state.currentQID ? "Active" : "Inactive"}
-                            color={question.id === state.currentQID ? "primary" : "default"}
+                            label={question.id === state.current_question_id ? "Active" : "Inactive"}
+                            color={question.id === state.current_question_id ? "primary" : "default"}
                             size="small"
                           />
                         </Box>
@@ -535,11 +535,11 @@ export default function AdminPanel() {
                         
                         <Button
                           fullWidth
-                          variant={question.id === state.currentQID ? "contained" : "outlined"}
+                          variant={question.id === state.current_question_id ? "contained" : "outlined"}
                           color="primary"
                           onClick={() => setCurrentQuestion(question.id)}
                         >
-                          {question.id === state.currentQID ? "Current Question" : "Set as Current"}
+                          {question.id === state.current_question_id ? "Current Question" : "Set as Current"}
                         </Button>
                       </CardContent>
                     </Card>
@@ -574,12 +574,12 @@ export default function AdminPanel() {
                     <TableRow>
                       <TableCell>
                         <Typography variant="body2">
-                          {state.questions?.find(q => q.id === state.currentQID)?.text || "No question set"}
+                          {state.questions?.find(q => q.id === state.current_question_id)?.text || "No question set"}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Stack spacing={1}>
-                          {state.questions?.find(q => q.id === state.currentQID)?.answers?.map((a, i) => (
+                          {state.questions?.find(q => q.id === state.current_question_id)?.answers?.map((a, i) => (
                             <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Chip
                                 label={a.text}
@@ -596,14 +596,14 @@ export default function AdminPanel() {
                       </TableCell>
                       <TableCell align="center">
                         <Chip 
-                          label={state.teamScores?.A || 0} 
+                          label={state.team_scores?.A || 0} 
                           color="primary" 
                           variant="outlined"
                         />
                       </TableCell>
                       <TableCell align="center">
                         <Chip 
-                          label={state.teamScores?.B || 0} 
+                          label={state.team_scores?.B || 0} 
                           color="primary" 
                           variant="outlined"
                         />
