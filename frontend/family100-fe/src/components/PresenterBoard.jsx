@@ -34,10 +34,15 @@ export default function PresenterBoard() {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
+      console.log('Fetched game data:', data);
       // derive current session state from game
       if (data && data.active_session && data.sessions && data.sessions[data.active_session]) {
-        setState(data.sessions[data.active_session]);
+        const sessionData = data.sessions[data.active_session];
+        console.log('Current session data:', sessionData);
+        console.log('Team scores:', sessionData.teamScores);
+        setState(sessionData);
       } else {
+        console.warn('No active session found in response');
         setState(null);
       }
     } catch (err) {
@@ -58,8 +63,8 @@ export default function PresenterBoard() {
   if (!state) return <div className="p-6 text-center text-2xl">Loading game state...</div>;
   
   // Get the current question
-  const currentQuestion = state.questions?.find(q => q.id === state.currentQID) || 
-                        state.questions?.[0]; // Fallback to first question if currentQID not found
+  const currentQuestion = state.questions?.find(q => q.id === state.current_question_id) || 
+                        state.questions?.[0]; // Fallback to first question if current_question_id not found
   
   console.log('Current question:', currentQuestion);
 
@@ -289,7 +294,7 @@ export default function PresenterBoard() {
                     animation: 'pulse 2s infinite',
                   }}
                 >
-                  {state?.teamScores?.A || 0}
+                  {state?.team_scores?.A || 0}
                 </Typography>
               </CardContent>
             </Card>
@@ -320,7 +325,7 @@ export default function PresenterBoard() {
                     animation: 'pulse 2s infinite',
                   }}
                 >
-                  {state?.teamScores?.B || 0}
+                  {state?.team_scores?.B || 0}
                 </Typography>
               </CardContent>
             </Card>
