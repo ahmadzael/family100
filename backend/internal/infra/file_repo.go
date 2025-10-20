@@ -21,19 +21,28 @@ func (r *FileRepo) Save(g *game.Game) error {
 }
 
 func (r *FileRepo) Load() (*game.Game, error) {
+	// if no file, return a new empty game
 	if _, err := os.Stat(r.path); os.IsNotExist(err) {
 		return &game.Game{
-			TeamScores: map[string]int{"A": 0, "B": 0},
-			Strikes:    0,
+			Sessions:      make(map[string]*game.GameSession),
+			ActiveSession: "",
 		}, nil
 	}
+
 	data, err := ioutil.ReadFile(r.path)
 	if err != nil {
 		return nil, err
 	}
+
 	var g game.Game
 	if err := json.Unmarshal(data, &g); err != nil {
 		return nil, err
 	}
+
+	// if Sessions map is nil, initialize it
+	if g.Sessions == nil {
+		g.Sessions = make(map[string]*game.GameSession)
+	}
+
 	return &g, nil
 }
