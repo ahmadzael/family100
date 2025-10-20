@@ -33,8 +33,13 @@ export default function PresenterBoard() {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-    const data = await res.json();
-    setState(data);
+      const data = await res.json();
+      // derive current session state from game
+      if (data && data.active_session && data.sessions && data.sessions[data.active_session]) {
+        setState(data.sessions[data.active_session]);
+      } else {
+        setState(null);
+      }
     } catch (err) {
       setError(err.message);
       console.error("Failed to fetch game state:", err);
@@ -53,7 +58,7 @@ export default function PresenterBoard() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1e3a8a 100%)',
+        background: 'white',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -92,10 +97,10 @@ export default function PresenterBoard() {
 
       {error && (
         <Fade in={!!error}>
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             icon={<WarningIcon />}
-            sx={{ 
+            sx={{
               position: 'relative',
               zIndex: 10,
               mb: 2,
@@ -108,7 +113,7 @@ export default function PresenterBoard() {
           </Alert>
         </Fade>
       )}
-      
+
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10, py: 4 }}>
         {/* Header Section */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
@@ -133,9 +138,9 @@ export default function PresenterBoard() {
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
               }}
             >
-              SKK MIGAS
+              SKK MIGAS FAMILY 100 QUIZ
             </Typography>
-            <Typography
+            {/* <Typography
               variant="h3"
               sx={{
                 color: 'white',
@@ -144,10 +149,10 @@ export default function PresenterBoard() {
               }}
             >
               FAMILY 100 QUIZ
-            </Typography>
+            </Typography> */}
             <Divider sx={{ borderColor: '#fbbf24', width: 200, mx: 'auto' }} />
           </Paper>
-          
+
           <Card elevation={8} sx={{ maxWidth: 800, mx: 'auto' }}>
             <CardContent sx={{ p: 4 }}>
               <Typography
@@ -158,17 +163,17 @@ export default function PresenterBoard() {
                   lineHeight: 1.3,
                 }}
               >
-                {state?.current_question?.text || "No Question Set"}
+                {state?.questions?.find(q => q.id === state.currentQID)?.text || "No Question Set"}
               </Typography>
             </CardContent>
           </Card>
         </Box>
 
         {/* Answers Section */}
-        {state?.current_question?.answers && (
+        {state?.questions?.find(q => q.id === state.currentQID)?.answers && (
           <Box sx={{ mb: 6 }}>
             <Grid container spacing={3}>
-              {state.current_question.answers.map((a, i) => (
+              {state.questions.find(q => q.id === state.currentQID).answers.map((a, i) => (
                 <Grid item xs={12} md={6} key={i}>
                   <Card
                     elevation={a.revealed ? 12 : 4}
@@ -177,7 +182,7 @@ export default function PresenterBoard() {
                       overflow: 'visible',
                       transform: a.revealed ? 'scale(1.02)' : 'scale(1)',
                       transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                      background: a.revealed 
+                      background: a.revealed
                         ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
                         : 'rgba(255, 255, 255, 0.95)',
                       color: a.revealed ? 'white' : 'text.primary',
@@ -205,7 +210,7 @@ export default function PresenterBoard() {
                     >
                       {i + 1}
                     </Avatar>
-                    
+
                     <CardContent sx={{ p: 3, pt: 4 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box sx={{ flexGrow: 1, mr: 2 }}>
@@ -275,7 +280,7 @@ export default function PresenterBoard() {
                     animation: 'pulse 2s infinite',
                   }}
                 >
-                  {state?.team_scores?.A || 0}
+                  {state?.teamScores?.A || 0}
                 </Typography>
               </CardContent>
             </Card>
@@ -284,7 +289,7 @@ export default function PresenterBoard() {
             <Card
               elevation={8}
               sx={{
-                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
                 color: 'white',
                 textAlign: 'center',
                 p: 4,
@@ -306,7 +311,7 @@ export default function PresenterBoard() {
                     animation: 'pulse 2s infinite',
                   }}
                 >
-                  {state?.team_scores?.B || 0}
+                  {state?.teamScores?.B || 0}
                 </Typography>
               </CardContent>
             </Card>

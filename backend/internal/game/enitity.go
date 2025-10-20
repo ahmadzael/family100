@@ -7,12 +7,22 @@ type Answer struct {
 }
 
 type Question struct {
+	ID      int      `json:"id"`
 	Text    string   `json:"text"`
 	Answers []Answer `json:"answers"`
 }
 
+type GameSession struct {
+	ID         string         `json:"id"`
+	Name       string         `json:"name"`
+	Questions  []Question     `json:"questions"`
+	CurrentQID int            `json:"current_question_id"`
+	TeamScores map[string]int `json:"team_scores"`
+	Strikes    int            `json:"strikes"`
+	CreatedAt  string         `json:"created_at"`
+}
+
 type Game struct {
-	CurrentQuestion *Question      `json:"current_question"`
-	TeamScores      map[string]int `json:"team_scores"`
-	Strikes         int            `json:"strikes"`
+	Sessions      map[string]*GameSession `json:"sessions"`
+	ActiveSession string                  `json:"active_session"`
 }
