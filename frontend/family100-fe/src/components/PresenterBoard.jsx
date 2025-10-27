@@ -72,12 +72,12 @@ export default function PresenterBoard() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'white',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Background Pattern */}
+      {/* Enhanced Background Pattern */}
       <Box
         sx={{
           position: 'absolute',
@@ -85,7 +85,7 @@ export default function PresenterBoard() {
           left: 0,
           right: 0,
           bottom: 0,
-          opacity: 0.1,
+          opacity: 0.15,
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -93,8 +93,8 @@ export default function PresenterBoard() {
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            transform: 'skewY(-2deg)',
+            background: 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+            transform: 'skewY(-1deg)',
           },
           '&::after': {
             content: '""',
@@ -103,8 +103,8 @@ export default function PresenterBoard() {
             right: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(-45deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            transform: 'skewY(2deg)',
+            background: 'radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.2) 0%, transparent 50%), radial-gradient(circle at 20% 20%, rgba(120, 200, 255, 0.1) 0%, transparent 50%)',
+            transform: 'skewY(1deg)',
           },
         }}
       />
@@ -145,26 +145,20 @@ export default function PresenterBoard() {
             <Typography
               variant="h2"
               sx={{
-                color: '#fbbf24',
+                color: '#ffffff',
                 fontWeight: 900,
                 mb: 2,
                 letterSpacing: 2,
-                textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                textShadow: '2px 2px 8px rgba(0,0,0,0.5)',
+                background: 'linear-gradient(45deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
               }}
             >
               SKK MIGAS FAMILY 100 QUIZ
             </Typography>
-            {/* <Typography
-              variant="h3"
-              sx={{
-                color: 'white',
-                fontWeight: 700,
-                mb: 2,
-              }}
-            >
-              FAMILY 100 QUIZ
-            </Typography> */}
-            <Divider sx={{ borderColor: '#fbbf24', width: 200, mx: 'auto' }} />
+            <Divider sx={{ borderColor: '#ffffff', width: 200, mx: 'auto', borderWidth: 2 }} />
           </Paper>
 
           <Card elevation={8} sx={{ maxWidth: 800, mx: 'auto' }}>
@@ -200,7 +194,7 @@ export default function PresenterBoard() {
                         ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
                         : 'rgba(255, 255, 255, 0.95)',
                       color: a.revealed ? 'white' : 'text.primary',
-                      border: a.revealed ? '3px solid #fbbf24' : '2px solid #e5e7eb',
+                      border: a.revealed ? '3px solid #6366f1' : '2px solid #e5e7eb',
                       '&:hover': {
                         transform: 'translateY(-4px)',
                         boxShadow: 8,
@@ -217,8 +211,8 @@ export default function PresenterBoard() {
                         height: 60,
                         fontSize: '1.5rem',
                         fontWeight: 900,
-                        bgcolor: a.revealed ? '#fbbf24' : 'primary.main',
-                        color: a.revealed ? '#059669' : 'white',
+                        bgcolor: a.revealed ? '#6366f1' : 'primary.main',
+                        color: a.revealed ? '#ffffff' : 'white',
                         boxShadow: 3,
                       }}
                     >
@@ -243,7 +237,7 @@ export default function PresenterBoard() {
                             variant="h4"
                             sx={{
                               fontWeight: 900,
-                              color: a.revealed ? '#fbbf24' : 'text.secondary',
+                              color: a.revealed ? '#6366f1' : 'text.secondary',
                             }}
                           >
                             {a.revealed ? a.score : "?"}
@@ -252,7 +246,7 @@ export default function PresenterBoard() {
                             <CheckCircleIcon
                               sx={{
                                 fontSize: '2rem',
-                                color: '#fbbf24',
+                                color: '#6366f1',
                               }}
                             />
                           )}
@@ -276,7 +270,7 @@ export default function PresenterBoard() {
                 color: 'white',
                 textAlign: 'center',
                 p: 4,
-                border: '3px solid #fbbf24',
+                border: '3px solid #6366f1',
                 transform: 'hover:scale(1.02)',
                 transition: 'transform 0.3s ease',
               }}
@@ -289,9 +283,13 @@ export default function PresenterBoard() {
                   variant="h1"
                   sx={{
                     fontWeight: 900,
-                    color: '#fbbf24',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                    color: '#ffffff',
+                    textShadow: '2px 2px 8px rgba(0,0,0,0.5)',
                     animation: 'pulse 2s infinite',
+                    background: 'linear-gradient(45deg, #ffffff 0%, #f0f9ff 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
                   }}
                 >
                   {state?.team_scores?.A || 0}
@@ -307,7 +305,7 @@ export default function PresenterBoard() {
                 color: 'white',
                 textAlign: 'center',
                 p: 4,
-                border: '3px solid #fbbf24',
+                border: '3px solid #6366f1',
                 transform: 'hover:scale(1.02)',
                 transition: 'transform 0.3s ease',
               }}
@@ -320,9 +318,13 @@ export default function PresenterBoard() {
                   variant="h1"
                   sx={{
                     fontWeight: 900,
-                    color: '#fbbf24',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                    color: '#ffffff',
+                    textShadow: '2px 2px 8px rgba(0,0,0,0.5)',
                     animation: 'pulse 2s infinite',
+                    background: 'linear-gradient(45deg, #ffffff 0%, #f0f9ff 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
                   }}
                 >
                   {state?.team_scores?.B || 0}
@@ -343,7 +345,7 @@ export default function PresenterBoard() {
               background: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
               color: 'white',
               borderRadius: 3,
-              border: '3px solid #fbbf24',
+              border: '3px solid #6366f1',
             }}
           >
             <Typography variant="h5" sx={{ fontWeight: 900 }}>
@@ -353,9 +355,13 @@ export default function PresenterBoard() {
           <Typography
             variant="h2"
             sx={{
-              color: '#fbbf24',
+              color: '#ffffff',
               fontWeight: 900,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              textShadow: '2px 2px 8px rgba(0,0,0,0.5)',
+              background: 'linear-gradient(45deg, #ffffff 0%, #fef3c7 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
             }}
           >
             {"❌".repeat(state?.strikes || 0)}
