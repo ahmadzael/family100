@@ -105,8 +105,10 @@ func (h *GameHandler) setActiveSession(w http.ResponseWriter, r *http.Request) {
 // POST   /api/sessions/{sessionID}/questions/{questionID}/set        -> set current question
 // POST   /api/sessions/{sessionID}/questions/{questionID}/answers/{answerIndex}/reveal -> reveal answer
 // POST   /api/sessions/{sessionID}/strike                            -> add strike
-// POST   /api/sessions/{sessionID}/points/{team}                     -> add points
+// POST   /api/sessions/{sessionID}/points/{team}                     -> add 10 points
+// POST   /api/sessions/{sessionID}/points/{team}/custom              -> add custom points (body: {"points": N})
 // POST   /api/sessions/{sessionID}/reset                             -> reset session
+// POST   /api/sessions/{sessionID}/freetextscore                     -> set free text score
 // DELETE /api/sessions/{sessionID}                                   -> delete session
 func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
 	base := "/api/sessions/"
@@ -171,11 +173,20 @@ func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(parts) >= 3 && parts[1] == "points" && r.Method == http.MethodPost {
+		// Check if it's custom points endpoint
+		if len(parts) >= 4 && parts[3] == "custom" {
+			h.addCustomPoints(w, r)
+			return
+		}
 		h.addPoints(w, r)
 		return
 	}
 	if len(parts) >= 2 && parts[1] == "reset" && r.Method == http.MethodPost {
 		h.resetSession(w, r)
+		return
+	}
+	if len(parts) >= 2 && parts[1] == "freetextscore" && r.Method == http.MethodPost {
+		h.setFreeTextScore(w, r)
 		return
 	}
 
@@ -308,6 +319,57 @@ func (h *GameHandler) addPoints(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]string{"status": "ok"})
 }
 
+func (h *GameHandler) addCustomPoints(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	// URL: /api/sessions/{sessionID}/points/{team}/custom
+	path := r.URL.Path[len("/api/sessions/"):]
+	parts := strings.Split(path, "/")
+	
+	// Debug logging
+	println("addCustomPoints called")
+	println("Path:", path)
+	println("Parts:", len(parts), parts)
+	
+	if len(parts) < 4 || parts[1] != "points" || parts[3] != "custom" {
+		println("Invalid path validation failed")
+		http.Error(w, "invalid path", 400)
+		return
+	}
+	sessionID := parts[0]
+	team := parts[2]
+	
+	println("SessionID:", sessionID, "Team:", team)
+
+	var req struct {
+		Points int `json:"points"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		println("JSON decode error:", err.Error())
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	
+	println("Received points:", req.Points)
+
+	if req.Points <= 0 {
+		println("Points validation failed: must be positive")
+		http.Error(w, "points must be positive", 400)
+		return
+	}
+
+	if err := h.service.AddPoints(sessionID, team, req.Points); err != nil {
+		println("Service error:", err.Error())
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	
+	println("Successfully added", req.Points, "points to team", team)
+	writeJSON(w, map[string]string{"status": "ok"})
+}
+
 func (h *GameHandler) resetSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", 405)
@@ -342,6 +404,35 @@ func (h *GameHandler) deleteSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.DeleteSession(sessionID); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "ok"})
+}
+
+func (h *GameHandler) setFreeTextScore(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	// URL: /api/sessions/{sessionID}/freetextscore
+	path := r.URL.Path[len("/api/sessions/"):]
+	parts := strings.Split(path, "/")
+	if len(parts) < 2 || parts[1] != "freetextscore" {
+		http.Error(w, "invalid path", 400)
+		return
+	}
+	sessionID := parts[0]
+
+	var req struct {
+		Score string `json:"score"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	if err := h.service.SetFreeTextScore(sessionID, req.Score); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

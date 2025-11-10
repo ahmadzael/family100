@@ -43,6 +43,9 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [newSessionName, setNewSessionName] = useState("");
+  const [freeTextScore, setFreeTextScore] = useState("");
+  const [customPointsA, setCustomPointsA] = useState("");
+  const [customPointsB, setCustomPointsB] = useState("");
 
   const fetchState = async () => {
     try {
@@ -215,6 +218,76 @@ export default function AdminPanel() {
     } catch (err) {
       setError(err.message);
       console.error(`Failed to execute ${endpoint}:`, err);
+    }
+  };
+
+  const addCustomPoints = async (team, points) => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    
+    const pointsNum = parseInt(points);
+    console.log('Adding custom points:', { team, points, pointsNum });
+    
+    if (isNaN(pointsNum) || pointsNum <= 0) {
+      setError("Please enter a valid positive number");
+      return;
+    }
+    
+    try {
+      setError(null);
+      const url = `/api/sessions/${activeSession}/points/${team}/custom`;
+      console.log('Sending request to:', url);
+      console.log('Request body:', { points: pointsNum });
+      
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ points: pointsNum }),
+      });
+      
+      console.log('Response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
+      }
+      
+      const result = await res.json();
+      console.log('Success response:', result);
+      
+      await fetchState();
+      // Clear input after success
+      if (team === "A") setCustomPointsA("");
+      if (team === "B") setCustomPointsB("");
+    } catch (err) {
+      setError(err.message);
+      console.error(`Failed to add custom points:`, err);
+    }
+  };
+
+  const updateFreeTextScore = async () => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    
+    try {
+      setError(null);
+      const res = await fetch(`/api/sessions/${activeSession}/freetextscore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: freeTextScore }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      await fetchState();
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to update free text score:", err);
     }
   };
 
@@ -433,30 +506,91 @@ export default function AdminPanel() {
                   
                   <Divider />
                   
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Quick Points
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          color="success"
+                          startIcon={<AddCircleIcon />}
+                          onClick={() => action("points/A")}
+                        >
+                          +10 Team A
+                        </Button>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          color="success"
+                          startIcon={<AddCircleIcon />}
+                          onClick={() => action("points/B")}
+                        >
+                          +10 Team B
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Custom Points - Team A
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        type="number"
+                        placeholder="Enter points"
+                        value={customPointsA}
+                        onChange={(e) => setCustomPointsA(e.target.value)}
+                        variant="outlined"
+                        size="small"
+                        sx={{ flexGrow: 1 }}
+                        inputProps={{ min: 1 }}
+                      />
                       <Button
-                        fullWidth
                         variant="contained"
                         color="success"
-                        startIcon={<AddCircleIcon />}
-                        onClick={() => action("points/A")}
+                        onClick={() => addCustomPoints("A", customPointsA)}
+                        disabled={!activeSession || !customPointsA}
+                        sx={{ minWidth: '100px' }}
                       >
-                        +10 Team A
+                        Add to A
                       </Button>
-                    </Grid>
-                    <Grid item xs={6}>
+                    </Box>
+                  </Box>
+                  
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Custom Points - Team B
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        type="number"
+                        placeholder="Enter points"
+                        value={customPointsB}
+                        onChange={(e) => setCustomPointsB(e.target.value)}
+                        variant="outlined"
+                        size="small"
+                        sx={{ flexGrow: 1 }}
+                        inputProps={{ min: 1 }}
+                      />
                       <Button
-                        fullWidth
                         variant="contained"
                         color="success"
-                        startIcon={<AddCircleIcon />}
-                        onClick={() => action("points/B")}
+                        onClick={() => addCustomPoints("B", customPointsB)}
+                        disabled={!activeSession || !customPointsB}
+                        sx={{ minWidth: '100px' }}
                       >
-                        +10 Team B
+                        Add to B
                       </Button>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
                   
                   <Button
                     fullWidth
@@ -468,6 +602,46 @@ export default function AdminPanel() {
                   >
                     Reset Game
                   </Button>
+                  
+                  <Divider />
+                  
+                  <Box>
+                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                      Skor Bebas
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      label="Masukkan Skor Bebas"
+                      value={freeTextScore}
+                      onChange={(e) => setFreeTextScore(e.target.value)}
+                      placeholder="Contoh: 50, 100, 200..."
+                      variant="outlined"
+                      multiline
+                      rows={2}
+                      sx={{
+                        mb: 2,
+                        '& .MuiOutlinedInput-root': {
+                          fontSize: '1.25rem',
+                          fontWeight: 600,
+                          '& input': {
+                            textAlign: 'center',
+                          },
+                        },
+                      }}
+                    />
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="secondary"
+                      onClick={updateFreeTextScore}
+                      disabled={!activeSession}
+                    >
+                      Update Skor Bebas
+                    </Button>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Input ini untuk menampilkan skor bebas pada presenter board
+                    </Typography>
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>
