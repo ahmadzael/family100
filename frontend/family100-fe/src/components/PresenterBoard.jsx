@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Typography,
@@ -25,6 +25,40 @@ import {
 export default function PresenterBoard() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+  const prevStateRef = useRef(null);
+  
+  // Sound effects using Web Audio API
+  const playSound = (frequency, duration, type = 'sine') => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = type;
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+  };
+  
+  const playRevealSound = () => {
+    // Success sound - ascending notes
+    playSound(523.25, 0.1); // C5
+    setTimeout(() => playSound(659.25, 0.1), 100); // E5
+    setTimeout(() => playSound(783.99, 0.2), 200); // G5
+  };
+  
+  const playStrikeSound = () => {
+    // Error sound - buzzer
+    playSound(200, 0.15, 'sawtooth');
+    setTimeout(() => playSound(150, 0.15, 'sawtooth'), 150);
+    setTimeout(() => playSound(100, 0.2, 'sawtooth'), 300);
+  };
 
   const fetchState = async () => {
     try {
@@ -40,6 +74,29 @@ export default function PresenterBoard() {
         const sessionData = data.sessions[data.active_session];
         console.log('Current session data:', sessionData);
         console.log('Team scores:', sessionData.teamScores);
+        
+        // Check for changes and play sounds
+        if (prevStateRef.current) {
+          // Check for strike changes
+          if (sessionData.strikes > prevStateRef.current.strikes) {
+            playStrikeSound();
+          }
+          
+          // Check for revealed answers
+          const currentQ = sessionData.questions?.find(q => q.id === sessionData.current_question_id);
+          const prevQ = prevStateRef.current.questions?.find(q => q.id === prevStateRef.current.current_question_id);
+          
+          if (currentQ && prevQ) {
+            const newRevealed = currentQ.answers?.filter((a, i) => 
+              a.revealed && !prevQ.answers?.[i]?.revealed
+            );
+            if (newRevealed && newRevealed.length > 0) {
+              playRevealSound();
+            }
+          }
+        }
+        
+        prevStateRef.current = sessionData;
         setState(sessionData);
       } else {
         console.warn('No active session found in response');
@@ -72,9 +129,12 @@ export default function PresenterBoard() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'white',
+        background: '#F5E6C8',
         position: 'relative',
         overflow: 'hidden',
+        '@media (min-width: 1920px)': {
+          fontSize: '1.2rem',
+        },
       }}
     >
       {/* Background Pattern */}
@@ -128,53 +188,63 @@ export default function PresenterBoard() {
         </Fade>
       )}
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10, py: 4 }}>
+      <Container 
+        maxWidth={false}
+        sx={{ 
+          position: 'relative', 
+          zIndex: 10, 
+          py: 2,
+          px: 3,
+          maxWidth: '1920px',
+          mx: 'auto',
+        }}
+      >
         {/* Header Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Paper
             elevation={10}
             sx={{
-              p: 4,
-              mb: 4,
-              background: 'rgba(255, 255, 255, 0.15)',
+              p: 2,
+              mb: 2,
+              background: 'rgba(255, 255, 255, 0.6)',
               backdropFilter: 'blur(10px)',
-              borderRadius: 4,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: 3,
+              border: '2px solid #D85D5D',
             }}
           >
             <Typography
               variant="h2"
               sx={{
-                color: '#fbbf24',
+                color: '#D85D5D',
                 fontWeight: 900,
-                mb: 2,
+                mb: 1,
                 letterSpacing: 2,
-                textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                fontSize: '2.5rem',
               }}
             >
               SKK MIGAS FAMILY 100 QUIZ
             </Typography>
-            {/* <Typography
-              variant="h3"
-              sx={{
-                color: 'white',
-                fontWeight: 700,
-                mb: 2,
-              }}
-            >
-              FAMILY 100 QUIZ
-            </Typography> */}
-            <Divider sx={{ borderColor: '#fbbf24', width: 200, mx: 'auto' }} />
+            <Divider sx={{ borderColor: '#D85D5D', borderWidth: 2, width: 250, mx: 'auto' }} />
           </Paper>
 
-          <Card elevation={8} sx={{ maxWidth: 800, mx: 'auto' }}>
-            <CardContent sx={{ p: 4 }}>
+          <Card 
+            elevation={8} 
+            sx={{ 
+              maxWidth: 1200, 
+              mx: 'auto',
+              background: '#3B4F8C',
+              border: '3px solid #D85D5D',
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
               <Typography
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: 'primary.main',
+                  color: 'white',
                   lineHeight: 1.3,
+                  fontSize: '1.8rem',
                 }}
               >
                 {currentQuestion?.text || "No Question Set"}
@@ -185,10 +255,10 @@ export default function PresenterBoard() {
 
         {/* Answers Section */}
         {currentQuestion?.answers && currentQuestion.answers.length > 0 && (
-          <Box sx={{ mb: 6 }}>
-            <Grid container spacing={3}>
+          <Box sx={{ mb: 2.5 }}>
+            <Grid container spacing={2}>
               {currentQuestion.answers.map((a, i) => (
-                <Grid item xs={12} md={6} key={i}>
+                <Grid item xs={12} sm={6} md={4} key={i}>
                   <Card
                     elevation={a.revealed ? 12 : 4}
                     sx={{
@@ -197,10 +267,13 @@ export default function PresenterBoard() {
                       transform: a.revealed ? 'scale(1.02)' : 'scale(1)',
                       transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                       background: a.revealed
-                        ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
-                        : 'rgba(255, 255, 255, 0.95)',
-                      color: a.revealed ? 'white' : 'text.primary',
-                      border: a.revealed ? '3px solid #fbbf24' : '2px solid #e5e7eb',
+                        ? '#3B4F8C'
+                        : 'rgba(255, 255, 255, 0.9)',
+                      color: a.revealed ? 'white' : '#333',
+                      border: a.revealed ? '3px solid #D85D5D' : '2px solid #D85D5D',
+                      minHeight: '120px',
+                      display: 'flex',
+                      alignItems: 'center',
                       '&:hover': {
                         transform: 'translateY(-4px)',
                         boxShadow: 8,
@@ -211,28 +284,28 @@ export default function PresenterBoard() {
                     <Avatar
                       sx={{
                         position: 'absolute',
-                        top: -20,
-                        left: -20,
-                        width: 60,
-                        height: 60,
+                        top: -15,
+                        left: -15,
+                        width: 55,
+                        height: 55,
                         fontSize: '1.5rem',
                         fontWeight: 900,
-                        bgcolor: a.revealed ? '#fbbf24' : 'primary.main',
-                        color: a.revealed ? '#059669' : 'white',
+                        bgcolor: a.revealed ? '#D85D5D' : '#3B4F8C',
+                        color: 'white',
                         boxShadow: 3,
                       }}
                     >
                       {i + 1}
                     </Avatar>
 
-                    <CardContent sx={{ p: 3, pt: 4 }}>
+                    <CardContent sx={{ p: 2.5, pt: 3, width: '100%' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box sx={{ flexGrow: 1, mr: 2 }}>
                           <Typography
                             variant="h6"
                             sx={{
                               fontWeight: 700,
-                              fontSize: '1.5rem',
+                              fontSize: '1.3rem',
                             }}
                           >
                             {a.revealed ? a.text : "???"}
@@ -243,7 +316,8 @@ export default function PresenterBoard() {
                             variant="h4"
                             sx={{
                               fontWeight: 900,
-                              color: a.revealed ? '#fbbf24' : 'text.secondary',
+                              color: a.revealed ? '#D85D5D' : '#999',
+                              fontSize: '2rem',
                             }}
                           >
                             {a.revealed ? a.score : "?"}
@@ -252,7 +326,7 @@ export default function PresenterBoard() {
                             <CheckCircleIcon
                               sx={{
                                 fontSize: '2rem',
-                                color: '#fbbf24',
+                                color: '#D85D5D',
                               }}
                             />
                           )}
@@ -266,32 +340,66 @@ export default function PresenterBoard() {
           </Box>
         )}
 
+        {/* Free Text Score Display Section */}
+        {state?.free_text_score && (
+          <Box sx={{ mb: 2.5, textAlign: 'center' }}>
+            <Paper
+              elevation={6}
+              sx={{
+                display: 'inline-block',
+                p: 2.5,
+                background: '#3B4F8C',
+                color: 'white',
+                borderRadius: 2,
+                border: '3px solid #D85D5D',
+                minWidth: '300px',
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, fontSize: '1.2rem' }}>
+                SKOR BEBAS
+              </Typography>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 900,
+                  color: '#D85D5D',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
+                  fontSize: '2.5rem',
+                }}
+              >
+                {state.free_text_score}
+              </Typography>
+            </Paper>
+          </Box>
+        )}
+
         {/* Team Scores Section */}
-        <Grid container spacing={4} sx={{ mb: 6 }}>
+        <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
           <Grid item xs={12} md={6}>
             <Card
               elevation={8}
               sx={{
-                background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
+                background: '#D85D5D',
                 color: 'white',
                 textAlign: 'center',
-                p: 4,
-                border: '3px solid #fbbf24',
+                p: 2.5,
+                border: '3px solid #3B4F8C',
                 transform: 'hover:scale(1.02)',
                 transition: 'transform 0.3s ease',
               }}
             >
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, fontSize: '2rem' }}>
                   TEAM A
                 </Typography>
                 <Typography
                   variant="h1"
                   sx={{
                     fontWeight: 900,
-                    color: '#fbbf24',
+                    color: 'white',
                     textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
                     animation: 'pulse 2s infinite',
+                    fontSize: '4rem',
                   }}
                 >
                   {state?.team_scores?.A || 0}
@@ -303,26 +411,27 @@ export default function PresenterBoard() {
             <Card
               elevation={8}
               sx={{
-                background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                background: '#3B4F8C',
                 color: 'white',
                 textAlign: 'center',
-                p: 4,
-                border: '3px solid #fbbf24',
+                p: 2.5,
+                border: '3px solid #D85D5D',
                 transform: 'hover:scale(1.02)',
                 transition: 'transform 0.3s ease',
               }}
             >
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, fontSize: '2rem' }}>
                   TEAM B
                 </Typography>
                 <Typography
                   variant="h1"
                   sx={{
                     fontWeight: 900,
-                    color: '#fbbf24',
+                    color: 'white',
                     textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
                     animation: 'pulse 2s infinite',
+                    fontSize: '4rem',
                   }}
                 >
                   {state?.team_scores?.B || 0}
@@ -338,24 +447,25 @@ export default function PresenterBoard() {
             elevation={6}
             sx={{
               display: 'inline-block',
-              p: 3,
-              mb: 3,
-              background: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
+              p: 2.5,
+              mb: 2,
+              background: '#D85D5D',
               color: 'white',
-              borderRadius: 3,
-              border: '3px solid #fbbf24',
+              borderRadius: 2,
+              border: '3px solid #3B4F8C',
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 900 }}>
+            <Typography variant="h5" sx={{ fontWeight: 900, fontSize: '1.3rem' }}>
               STRIKES
             </Typography>
           </Paper>
           <Typography
             variant="h2"
             sx={{
-              color: '#fbbf24',
+              color: '#D85D5D',
               fontWeight: 900,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
+              fontSize: '3.5rem',
             }}
           >
             {"❌".repeat(state?.strikes || 0)}

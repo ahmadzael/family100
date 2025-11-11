@@ -175,3 +175,16 @@ func (s *service) DeleteSession(sessionID string) error {
 	}
 	return s.repo.Save(g)
 }
+
+func (s *service) SetFreeTextScore(sessionID string, score string) error {
+	g, err := s.repo.Load()
+	if err != nil {
+		return err
+	}
+	session, exists := g.Sessions[sessionID]
+	if !exists {
+		return fmt.Errorf("session not found")
+	}
+	session.FreeTextScore = score
+	return s.repo.Save(g)
+}
