@@ -256,87 +256,86 @@ export default function PresenterBoard() {
         {/* Answers Section */}
         {currentQuestion?.answers && currentQuestion.answers.length > 0 && (
           <Box sx={{ mb: 2.5 }}>
-            <Grid container spacing={2}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: currentQuestion.answers.length === 6 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: 2 }}>
               {currentQuestion.answers.map((a, i) => (
-                <Grid item xs={12} sm={6} md={4} key={i}>
-                  <Card
-                    elevation={a.revealed ? 12 : 4}
+                <Card
+                  key={i}
+                  elevation={a.revealed ? 12 : 4}
+                  sx={{
+                    position: 'relative',
+                    overflow: 'visible',
+                    transform: a.revealed ? 'scale(1.02)' : 'scale(1)',
+                    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    background: a.revealed
+                      ? '#3B4F8C'
+                      : 'rgba(255, 255, 255, 0.9)',
+                    color: a.revealed ? 'white' : '#333',
+                    border: a.revealed ? '3px solid #D85D5D' : '2px solid #D85D5D',
+                    minHeight: '120px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 8,
+                    },
+                  }}
+                >
+                  {/* Answer Number Badge */}
+                  <Avatar
                     sx={{
-                      position: 'relative',
-                      overflow: 'visible',
-                      transform: a.revealed ? 'scale(1.02)' : 'scale(1)',
-                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                      background: a.revealed
-                        ? '#3B4F8C'
-                        : 'rgba(255, 255, 255, 0.9)',
-                      color: a.revealed ? 'white' : '#333',
-                      border: a.revealed ? '3px solid #D85D5D' : '2px solid #D85D5D',
-                      minHeight: '120px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 8,
-                      },
+                      position: 'absolute',
+                      top: -15,
+                      left: -15,
+                      width: 55,
+                      height: 55,
+                      fontSize: '1.5rem',
+                      fontWeight: 900,
+                      bgcolor: a.revealed ? '#D85D5D' : '#3B4F8C',
+                      color: 'white',
+                      boxShadow: 3,
                     }}
                   >
-                    {/* Answer Number Badge */}
-                    <Avatar
-                      sx={{
-                        position: 'absolute',
-                        top: -15,
-                        left: -15,
-                        width: 55,
-                        height: 55,
-                        fontSize: '1.5rem',
-                        fontWeight: 900,
-                        bgcolor: a.revealed ? '#D85D5D' : '#3B4F8C',
-                        color: 'white',
-                        boxShadow: 3,
-                      }}
-                    >
-                      {i + 1}
-                    </Avatar>
+                    {i + 1}
+                  </Avatar>
 
-                    <CardContent sx={{ p: 2.5, pt: 3, width: '100%' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ flexGrow: 1, mr: 2 }}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '1.3rem',
-                            }}
-                          >
-                            {a.revealed ? a.text : "???"}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography
-                            variant="h4"
-                            sx={{
-                              fontWeight: 900,
-                              color: a.revealed ? '#D85D5D' : '#999',
-                              fontSize: '2rem',
-                            }}
-                          >
-                            {a.revealed ? a.score : "?"}
-                          </Typography>
-                          {a.revealed && (
-                            <CheckCircleIcon
-                              sx={{
-                                fontSize: '2rem',
-                                color: '#D85D5D',
-                              }}
-                            />
-                          )}
-                        </Box>
+                  <CardContent sx={{ p: 2.5, pt: 3, width: '100%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box sx={{ flexGrow: 1, mr: 2 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '1.3rem',
+                          }}
+                        >
+                          {a.revealed ? a.text : "???"}
+                        </Typography>
                       </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 900,
+                            color: a.revealed ? '#D85D5D' : '#999',
+                            fontSize: '2rem',
+                          }}
+                        >
+                          {a.revealed ? a.score : "?"}
+                        </Typography>
+                        {a.revealed && (
+                          <CheckCircleIcon
+                            sx={{
+                              fontSize: '2rem',
+                              color: '#D85D5D',
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
               ))}
-            </Grid>
+            </Box>
           </Box>
         )}
 
