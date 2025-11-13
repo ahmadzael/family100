@@ -47,6 +47,11 @@ export default function AdminPanel() {
   const [customPointsA, setCustomPointsA] = useState("");
   const [customPointsB, setCustomPointsB] = useState("");
 
+  const playSound = (soundFile) => {
+    const audio = new Audio(soundFile);
+    audio.play();
+  };
+
   const fetchState = async () => {
     try {
       setError(null);
@@ -178,6 +183,7 @@ export default function AdminPanel() {
     }
     
     try {
+      playSound('/reveal.mp3');
       setError(null);
       const res = await fetch(`/api/sessions/${activeSession}/questions/${questionId}/answers/${answerIndex}/reveal`, {
         method: "POST",
@@ -196,6 +202,12 @@ export default function AdminPanel() {
     if (!activeSession) {
       setError("No active session");
       return;
+    }
+
+    if (endpoint === "strike") {
+      playSound('/strike.mp3');
+    } else if (endpoint === "reveal") {
+      playSound('/reveal.mp3');
     }
     
     try {
