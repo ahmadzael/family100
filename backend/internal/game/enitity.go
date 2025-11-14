@@ -21,6 +21,8 @@ type GameSession struct {
 	Strikes       int            `json:"strikes"`
 	FreeTextScore string         `json:"free_text_score"`
 	CreatedAt     string         `json:"created_at"`
+	TimerEndTime  int64          `json:"timer_end_time"`
+	TimerDuration int            `json:"timer_duration"`
 }
 
 type Game struct {

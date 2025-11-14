@@ -46,6 +46,12 @@ export default function AdminPanel() {
   const [freeTextScore, setFreeTextScore] = useState("");
   const [customPointsA, setCustomPointsA] = useState("");
   const [customPointsB, setCustomPointsB] = useState("");
+  const [timerDuration, setTimerDuration] = useState(10);
+
+  const playSound = (soundFile) => {
+    const audio = new Audio(soundFile);
+    audio.play();
+  };
 
   const fetchState = async () => {
     try {
@@ -178,6 +184,7 @@ export default function AdminPanel() {
     }
     
     try {
+      playSound('/reveal.mp3');
       setError(null);
       const res = await fetch(`/api/sessions/${activeSession}/questions/${questionId}/answers/${answerIndex}/reveal`, {
         method: "POST",
@@ -197,6 +204,12 @@ export default function AdminPanel() {
       setError("No active session");
       return;
     }
+
+    if (endpoint === "strike") {
+      playSound('/strike.mp3');
+    } else if (endpoint === "reveal") {
+      playSound('/reveal.mp3');
+    }
     
     try {
       setError(null);
@@ -208,6 +221,8 @@ export default function AdminPanel() {
         url = `/api/sessions/${activeSession}/points/${team}`;
       } else if (endpoint === "reset") {
         url = `/api/sessions/${activeSession}/reset`;
+      } else if (endpoint === 'reset-strikes') {
+        url = `/api/sessions/${activeSession}/strikes/reset`;
       }
       
       const res = await fetch(url, { method: "POST" });
@@ -288,6 +303,48 @@ export default function AdminPanel() {
     } catch (err) {
       setError(err.message);
       console.error("Failed to update free text score:", err);
+    }
+  };
+
+  const startTimer = async () => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    try {
+      setError(null);
+      const res = await fetch(`/api/sessions/${activeSession}/timer/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration: timerDuration }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      await fetchState();
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to start timer:", err);
+    }
+  };
+
+  const stopTimer = async () => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    try {
+      setError(null);
+      const res = await fetch(`/api/sessions/${activeSession}/timer/stop`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      await fetchState();
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to stop timer:", err);
     }
   };
 
@@ -491,7 +548,7 @@ export default function AdminPanel() {
                         Reveal Answer
                       </Button>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={4}>
                       <Button
                         fullWidth
                         variant="contained"
@@ -502,8 +559,49 @@ export default function AdminPanel() {
                         Add Strike
                       </Button>
                     </Grid>
+                    <Grid item xs={4}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="warning"
+                        startIcon={<RefreshIcon />}
+                        onClick={() => action("reset-strikes")}
+                      >
+                        Reset Strikes
+                      </Button>
+                    </Grid>
                   </Grid>
                   
+                  <Divider />
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Timer Controls
+                    </Typography>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Duration (s)"
+                          value={timerDuration}
+                          onChange={(e) => setTimerDuration(parseInt(e.target.value, 10))}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Button fullWidth variant="contained" color="info" onClick={startTimer}>
+                          Start Timer
+                        </Button>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Button fullWidth variant="outlined" color="info" onClick={stopTimer}>
+                          Stop Timer
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
                   <Divider />
                   
                   <Box>

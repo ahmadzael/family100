@@ -188,3 +188,48 @@ func (s *service) SetFreeTextScore(sessionID string, score string) error {
 	session.FreeTextScore = score
 	return s.repo.Save(g)
 }
+
+func (s *service) ResetStrikes(sessionID string) error {
+	g, err := s.repo.Load()
+	if err != nil {
+		return err
+	}
+	session, exists := g.Sessions[sessionID]
+	if !exists {
+		return fmt.Errorf("session not found")
+	}
+	session.Strikes = 0
+	return s.repo.Save(g)
+}
+
+func (s *service) StartTimer(sessionID string, duration int) error {
+	g, err := s.repo.Load()
+	if err != nil {
+		return err
+	}
+	session, exists := g.Sessions[sessionID]
+	if !exists {
+		return fmt.Errorf("session not found")
+	}
+
+	session.TimerDuration = duration
+	session.TimerEndTime = time.Now().Unix() + int64(duration)
+
+	return s.repo.Save(g)
+}
+
+func (s *service) StopTimer(sessionID string) error {
+	g, err := s.repo.Load()
+	if err != nil {
+		return err
+	}
+	session, exists := g.Sessions[sessionID]
+	if !exists {
+		return fmt.Errorf("session not found")
+	}
+
+	session.TimerEndTime = 0
+	session.TimerDuration = 0
+
+	return s.repo.Save(g)
+}
