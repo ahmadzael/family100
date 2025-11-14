@@ -25,40 +25,6 @@ import {
 export default function PresenterBoard() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
-  const prevStateRef = useRef(null);
-  
-  // Sound effects using Web Audio API
-  const playSound = (frequency, duration, type = 'sine') => {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration);
-  };
-  
-  const playRevealSound = () => {
-    // Success sound - ascending notes
-    playSound(523.25, 0.1); // C5
-    setTimeout(() => playSound(659.25, 0.1), 100); // E5
-    setTimeout(() => playSound(783.99, 0.2), 200); // G5
-  };
-  
-  const playStrikeSound = () => {
-    // Error sound - buzzer
-    playSound(200, 0.15, 'sawtooth');
-    setTimeout(() => playSound(150, 0.15, 'sawtooth'), 150);
-    setTimeout(() => playSound(100, 0.2, 'sawtooth'), 300);
-  };
 
   const fetchState = async () => {
     try {
@@ -74,29 +40,6 @@ export default function PresenterBoard() {
         const sessionData = data.sessions[data.active_session];
         console.log('Current session data:', sessionData);
         console.log('Team scores:', sessionData.teamScores);
-        
-        // Check for changes and play sounds
-        if (prevStateRef.current) {
-          // Check for strike changes
-          if (sessionData.strikes > prevStateRef.current.strikes) {
-            playStrikeSound();
-          }
-          
-          // Check for revealed answers
-          const currentQ = sessionData.questions?.find(q => q.id === sessionData.current_question_id);
-          const prevQ = prevStateRef.current.questions?.find(q => q.id === prevStateRef.current.current_question_id);
-          
-          if (currentQ && prevQ) {
-            const newRevealed = currentQ.answers?.filter((a, i) => 
-              a.revealed && !prevQ.answers?.[i]?.revealed
-            );
-            if (newRevealed && newRevealed.length > 0) {
-              playRevealSound();
-            }
-          }
-        }
-        
-        prevStateRef.current = sessionData;
         setState(sessionData);
       } else {
         console.warn('No active session found in response');
@@ -122,6 +65,7 @@ export default function PresenterBoard() {
   // Get the current question
   const currentQuestion = state.questions?.find(q => q.id === state.current_question_id) || 
                         state.questions?.[0]; // Fallback to first question if current_question_id not found
+
   
   console.log('Current question:', currentQuestion);
 
@@ -129,7 +73,10 @@ export default function PresenterBoard() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: '#F5E6C8',
+        backgroundImage: 'url(/BackgroundFamily100.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflow: 'hidden',
         '@media (min-width: 1920px)': {
@@ -244,7 +191,7 @@ export default function PresenterBoard() {
                   fontWeight: 700,
                   color: 'white',
                   lineHeight: 1.3,
-                  fontSize: '1.8rem',
+                  fontSize: '2.2rem',
                 }}
               >
                 {currentQuestion?.text || "No Question Set"}
@@ -256,7 +203,7 @@ export default function PresenterBoard() {
         {/* Answers Section */}
         {currentQuestion?.answers && currentQuestion.answers.length > 0 && (
           <Box sx={{ mb: 2.5 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: currentQuestion.answers.length === 6 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
               {currentQuestion.answers.map((a, i) => (
                 <Card
                   key={i}
@@ -305,7 +252,7 @@ export default function PresenterBoard() {
                           variant="h6"
                           sx={{
                             fontWeight: 700,
-                            fontSize: '1.3rem',
+                            fontSize: '1.6rem',
                           }}
                         >
                           {a.revealed ? a.text : "???"}
@@ -410,11 +357,11 @@ export default function PresenterBoard() {
             <Card
               elevation={8}
               sx={{
-                background: '#3B4F8C',
+                background: '#198f4ea9', // Green color
                 color: 'white',
                 textAlign: 'center',
                 p: 2.5,
-                border: '3px solid #D85D5D',
+                border: '3px solid #1B5E20', // Darker green border
                 transform: 'hover:scale(1.02)',
                 transition: 'transform 0.3s ease',
               }}

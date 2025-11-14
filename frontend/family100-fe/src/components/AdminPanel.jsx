@@ -220,6 +220,8 @@ export default function AdminPanel() {
         url = `/api/sessions/${activeSession}/points/${team}`;
       } else if (endpoint === "reset") {
         url = `/api/sessions/${activeSession}/reset`;
+      } else if (endpoint === 'reset-strikes') {
+        url = `/api/sessions/${activeSession}/strikes/reset`;
       }
       
       const res = await fetch(url, { method: "POST" });
@@ -503,7 +505,7 @@ export default function AdminPanel() {
                         Reveal Answer
                       </Button>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={4}>
                       <Button
                         fullWidth
                         variant="contained"
@@ -512,6 +514,17 @@ export default function AdminPanel() {
                         onClick={() => action("strike")}
                       >
                         Add Strike
+                      </Button>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="warning"
+                        startIcon={<RefreshIcon />}
+                        onClick={() => action("reset-strikes")}
+                      >
+                        Reset Strikes
                       </Button>
                     </Grid>
                   </Grid>

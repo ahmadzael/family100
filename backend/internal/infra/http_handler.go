@@ -108,6 +108,7 @@ func (h *GameHandler) setActiveSession(w http.ResponseWriter, r *http.Request) {
 // POST   /api/sessions/{sessionID}/points/{team}                     -> add 10 points
 // POST   /api/sessions/{sessionID}/points/{team}/custom              -> add custom points (body: {"points": N})
 // POST   /api/sessions/{sessionID}/reset                             -> reset session
+// POST   /api/sessions/{sessionID}/strikes/reset                     -> reset strikes to 0
 // POST   /api/sessions/{sessionID}/freetextscore                     -> set free text score
 // DELETE /api/sessions/{sessionID}                                   -> delete session
 func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
@@ -168,9 +169,15 @@ func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(parts) >= 2 && parts[1] == "strike" && r.Method == http.MethodPost {
-		h.addStrike(w, r)
-		return
+	if len(parts) >= 2 && parts[1] == "strike" {
+		if len(parts) == 2 && r.Method == http.MethodPost {
+			h.addStrike(w, r)
+			return
+		}
+		if len(parts) == 3 && parts[2] == "reset" && r.Method == http.MethodPost {
+			h.resetStrikes(w, r)
+			return
+		}
 	}
 	if len(parts) >= 3 && parts[1] == "points" && r.Method == http.MethodPost {
 		// Check if it's custom points endpoint
@@ -433,6 +440,27 @@ func (h *GameHandler) setFreeTextScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.SetFreeTextScore(sessionID, req.Score); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "ok"})
+}
+
+func (h *GameHandler) resetStrikes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	// URL: /api/sessions/{sessionID}/strikes/reset
+	path := r.URL.Path[len("/api/sessions/"):]
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 || parts[1] != "strikes" || parts[2] != "reset" {
+		http.Error(w, "invalid path", 400)
+		return
+	}
+	sessionID := parts[0]
+
+	if err := h.service.ResetStrikes(sessionID); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

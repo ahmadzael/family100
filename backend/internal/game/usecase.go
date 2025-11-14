@@ -13,4 +13,5 @@ type UseCase interface {
 	ResetSession(sessionID string) error
 	DeleteSession(sessionID string) error
 	SetFreeTextScore(sessionID string, score string) error
+	ResetStrikes(sessionID string) error
 }
