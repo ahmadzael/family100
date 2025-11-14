@@ -109,6 +109,8 @@ func (h *GameHandler) setActiveSession(w http.ResponseWriter, r *http.Request) {
 // POST   /api/sessions/{sessionID}/points/{team}/custom              -> add custom points (body: {"points": N})
 // POST   /api/sessions/{sessionID}/reset                             -> reset session
 // POST   /api/sessions/{sessionID}/strikes/reset                     -> reset strikes to 0
+// POST   /api/sessions/{sessionID}/timer/start                       -> start timer (body: {"duration": N})
+// POST   /api/sessions/{sessionID}/timer/stop                        -> stop timer
 // POST   /api/sessions/{sessionID}/freetextscore                     -> set free text score
 // DELETE /api/sessions/{sessionID}                                   -> delete session
 func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +171,7 @@ func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(parts) >= 2 && parts[1] == "strike" {
+	if len(parts) >= 2 && (parts[1] == "strike" || parts[1] == "strikes") {
 		if len(parts) == 2 && r.Method == http.MethodPost {
 			h.addStrike(w, r)
 			return
@@ -195,6 +197,16 @@ func (h *GameHandler) sessionsRouter(w http.ResponseWriter, r *http.Request) {
 	if len(parts) >= 2 && parts[1] == "freetextscore" && r.Method == http.MethodPost {
 		h.setFreeTextScore(w, r)
 		return
+	}
+	if len(parts) >= 3 && parts[1] == "timer" {
+		if parts[2] == "start" && r.Method == http.MethodPost {
+			h.startTimer(w, r)
+			return
+		}
+		if parts[2] == "stop" && r.Method == http.MethodPost {
+			h.stopTimer(w, r)
+			return
+		}
 	}
 
 	http.Error(w, "invalid session path", 400)
@@ -461,6 +473,56 @@ func (h *GameHandler) resetStrikes(w http.ResponseWriter, r *http.Request) {
 	sessionID := parts[0]
 
 	if err := h.service.ResetStrikes(sessionID); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "ok"})
+}
+
+func (h *GameHandler) startTimer(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	// URL: /api/sessions/{sessionID}/timer/start
+	path := r.URL.Path[len("/api/sessions/"):]
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 || parts[1] != "timer" || parts[2] != "start" {
+		http.Error(w, "invalid path", 400)
+		return
+	}
+	sessionID := parts[0]
+
+	var req struct {
+		Duration int `json:"duration"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	if err := h.service.StartTimer(sessionID, req.Duration); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]string{"status": "ok"})
+}
+
+func (h *GameHandler) stopTimer(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	// URL: /api/sessions/{sessionID}/timer/stop
+	path := r.URL.Path[len("/api/sessions/"):]
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 || parts[1] != "timer" || parts[2] != "stop" {
+		http.Error(w, "invalid path", 400)
+		return
+	}
+	sessionID := parts[0]
+
+	if err := h.service.StopTimer(sessionID); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

@@ -14,4 +14,6 @@ type UseCase interface {
 	DeleteSession(sessionID string) error
 	SetFreeTextScore(sessionID string, score string) error
 	ResetStrikes(sessionID string) error
+	StartTimer(sessionID string, duration int) error
+	StopTimer(sessionID string) error
 }

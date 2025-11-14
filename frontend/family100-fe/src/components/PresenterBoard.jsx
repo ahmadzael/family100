@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -25,6 +25,7 @@ import {
 export default function PresenterBoard() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const fetchState = async () => {
     try {
@@ -56,6 +57,24 @@ export default function PresenterBoard() {
     const interval = setInterval(fetchState, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (state && state.timer_end_time > 0) {
+      const calculateTimeLeft = () => {
+        const now = Math.floor(Date.now() / 1000);
+        const endTime = state.timer_end_time;
+        const remaining = endTime - now;
+        setTimeLeft(remaining > 0 ? remaining : 0);
+      };
+
+      calculateTimeLeft(); // Initial calculation
+      const timerInterval = setInterval(calculateTimeLeft, 1000);
+
+      return () => clearInterval(timerInterval);
+    } else {
+      setTimeLeft(0);
+    }
+  }, [state]);
 
   // Debug log to inspect the state
   console.log('Current state:', state);
@@ -199,6 +218,47 @@ export default function PresenterBoard() {
             </CardContent>
           </Card>
         </Box>
+
+        {/* Timer Display Section */}
+        {timeLeft > 0 && (
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              left: 20,
+              zIndex: 1000, // Ensure timer is on top
+            }}
+          >
+            <Paper
+              elevation={8}
+              sx={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%', // Make it a circle
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                p: 2.5,
+                background: '#FFC107', // Amber color for timer
+                color: 'black',
+                border: '5px solid #FFA000',
+              }}
+            >
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 900,
+                  color: '#D85D5D',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
+                  fontSize: '2.5rem',
+                }}
+              >
+                {timeLeft}
+              </Typography>
+            </Paper>
+          </Box>
+        )}
 
         {/* Answers Section */}
         {currentQuestion?.answers && currentQuestion.answers.length > 0 && (

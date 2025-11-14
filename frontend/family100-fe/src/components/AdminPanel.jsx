@@ -46,6 +46,7 @@ export default function AdminPanel() {
   const [freeTextScore, setFreeTextScore] = useState("");
   const [customPointsA, setCustomPointsA] = useState("");
   const [customPointsB, setCustomPointsB] = useState("");
+  const [timerDuration, setTimerDuration] = useState(10);
 
   const playSound = (soundFile) => {
     const audio = new Audio(soundFile);
@@ -305,6 +306,48 @@ export default function AdminPanel() {
     }
   };
 
+  const startTimer = async () => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    try {
+      setError(null);
+      const res = await fetch(`/api/sessions/${activeSession}/timer/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration: timerDuration }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      await fetchState();
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to start timer:", err);
+    }
+  };
+
+  const stopTimer = async () => {
+    if (!activeSession) {
+      setError("No active session");
+      return;
+    }
+    try {
+      setError(null);
+      const res = await fetch(`/api/sessions/${activeSession}/timer/stop`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      await fetchState();
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to stop timer:", err);
+    }
+  };
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
       <Container maxWidth="xl">
@@ -529,6 +572,36 @@ export default function AdminPanel() {
                     </Grid>
                   </Grid>
                   
+                  <Divider />
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Timer Controls
+                    </Typography>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Duration (s)"
+                          value={timerDuration}
+                          onChange={(e) => setTimerDuration(parseInt(e.target.value, 10))}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Button fullWidth variant="contained" color="info" onClick={startTimer}>
+                          Start Timer
+                        </Button>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Button fullWidth variant="outlined" color="info" onClick={stopTimer}>
+                          Stop Timer
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
                   <Divider />
                   
                   <Box>
